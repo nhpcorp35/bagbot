@@ -1,4 +1,5 @@
 websockets
 rich
 bittensor
-bittensor-cli
+bittensor-cli==9.18.1
+bittensor-wallet==4.0.1
