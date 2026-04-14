@@ -681,6 +681,7 @@ class BittensorUtility():
                     timeout=45.0
                 )
                 print(f'after buy {str(buyTrade)}')
+                #print(f'after buy {str(buyTrade)}: {str(stake_result)}')
                 if stake_result is True or stake_result.__dict__.get('success') is True:
                     logger.info(f"Staked {float(buyTrade['tao_amount'])} TAO to subnet {buyTrade['netuid']} ({str(stake_result)})")
                 else:

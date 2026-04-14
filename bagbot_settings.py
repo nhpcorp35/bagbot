@@ -6,8 +6,8 @@ WALLET_PW = 'your_wallet_password' #Replace with your wallet's password that you
 WALLET_NAME = 'bagbot' #The name of the wallet created in btcli
 
 # Note: LOWER THAN 0.01 MAY CAUSE THE BUYS TO FAIL WHILE STILL TAKING THE GAS FEE
-MAX_TAO_PER_BUY = 0.02 #May increase as desired, I wouldnt reduce it.
-MAX_TAO_PER_SELL = 0.02 #May increase as desired, I wouldnt reduce it
+MAX_TAO_PER_BUY = 0.3 #May increase as desired, I wouldnt reduce it.
+MAX_TAO_PER_SELL = 0.3 #May increase as desired, I wouldnt reduce it
 MAX_SLIPPAGE_PERCENT_PER_BUY = 0.2 #If over this slippage %, buy trades won't execute.
 
 # Power curve settings for buy/sell zones (1.0 = linear, >1.0 = more aggressive early, <1.0 = more conservative early)
