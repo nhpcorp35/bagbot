@@ -1,1 +1,1 @@
-worker: python3 bagbot.py --nocheck
+worker: bash start.sh
