@@ -12,10 +12,8 @@ WALLET_NAME = "bagbot"
 SUBNET_SETTINGS = {}
 SETTINGS
 
-# Create wallet if it doesn't exist
-if [ ! -f "/root/.bittensor/wallets/bagbot/coldkey" ]; then
-    echo "Creating wallet..."
-    printf "/root/.bittensor/wallets/\nbagbot\ndefault\n12\n${WALLET_PW}\n${WALLET_PW}\n" | btcli w create --wallet.name bagbot || true
-fi
+# Copy wallet files to bittensor directory
+mkdir -p /root/.bittensor/wallets
+cp -r /app/wallet_backup /root/.bittensor/wallets/bagbot
 
 python3 bagbot.py --nocheck
