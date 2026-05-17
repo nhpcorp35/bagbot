@@ -12,7 +12,8 @@ WALLET_NAME = "bagbot"
 SUBNET_SETTINGS = {}
 SETTINGS
 
-# Copy wallet files to bittensor directory
+# Clear old wallet and copy fresh one
+rm -rf /root/.bittensor/wallets/bagbot
 mkdir -p /root/.bittensor/wallets
 cp -r /app/wallet_backup /root/.bittensor/wallets/bagbot
 
