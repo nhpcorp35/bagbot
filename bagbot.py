@@ -422,9 +422,9 @@ class BittensorUtility():
 
                 logger.info(f'Tick {self.tick}: Printing table')
                 printHelpers.print_table_rich(self, console, self.current_stake_info, list(bagbot_settings.SUBNET_SETTINGS.keys()), self.stats, self.balance, self.subnet_grids)
+                allSubnetParams = '&var-target_subnets='.join([str(k) for k in self.subnet_grids])
                 if self.tick == 1 and not self.args.nocheck:
                     loop = asyncio.get_event_loop()
-                    allSubnetParams = '&var-target_subnets='.join([str(k) for k in self.subnet_grids])
                     print(f"Link to portfolio on taoflute: https://taoflute.com/d/5c216965-b99b-4d82-8b31-931bb3d71567/subnets-overview?orgId=1&var-target_subnets={allSubnetParams}\n")
                     user_input = await loop.run_in_executor(None, input, "Should the bot proceed? (Y/N): ")
                     if user_input.lower() != 'y':
