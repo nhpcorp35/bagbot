@@ -1,0 +1,6 @@
+[phases.install]
+cmds = [
+  "pip install websockets rich bittensor bittensor-cli==9.18.1 bittensor-wallet==4.0.1",
+  "pip uninstall scalecodec cyscale -y",
+  "pip install cyscale --force-reinstall"
+]
