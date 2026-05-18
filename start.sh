@@ -5,12 +5,8 @@ set -e
 pip uninstall scalecodec cyscale -y
 pip install cyscale --force-reinstall
 
-# Write settings overrides from env vars
-cat > /app/bagbot_settings_overrides.py << SETTINGS
-WALLET_PW = "${WALLET_PW}"
-WALLET_NAME = "bagbot"
-SUBNET_SETTINGS = {}
-SETTINGS
+# Write settings overrides - use printf to handle special characters
+printf "WALLET_PW = '%s'\nWALLET_NAME = 'bagbot'\nSUBNET_SETTINGS = {}\n" "$WALLET_PW" > /app/bagbot_settings_overrides.py
 
 # Clear old wallet and copy fresh one
 rm -rf /root/.bittensor/wallets/bagbot
