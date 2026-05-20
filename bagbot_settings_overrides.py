@@ -14,7 +14,7 @@ SUBNET_SETTINGS = {
     },
     110: {
         'buy_lower':  0.003,    # buy aggressively if it drops ~70%
-        'buy_upper':  0.0095,   # start buying at/near current price
+        'buy_upper':  0.0105,   # raised to chase current price
         'sell_lower': 0.013,    # start selling at ~40% above entry
         'sell_upper': 0.025,    # sell hard near ~3x
         'max_alpha':  50,       # smaller position, more volatile subnet
