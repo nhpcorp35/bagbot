@@ -22,6 +22,7 @@ import ast
 from pathlib import Path
 import sys
 from types import SimpleNamespace
+import taonow_sync
 
 class InvalidSettings(Exception): pass
 class InternetIssueException(Exception): pass
@@ -400,6 +401,9 @@ class BittensorUtility():
     async def run(self):
         await self.setup()
         await self.refresh_subnet_grid()  # Load subnet settings before first tick
+
+        # Start taonow score polling in background — updates SUBNET_SETTINGS hourly
+        asyncio.create_task(taonow_sync.polling_loop(bagbot_settings))
 
         while True:
             self.tick += 1
