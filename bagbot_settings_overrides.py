@@ -7,10 +7,20 @@ SUBNET_SETTINGS = {
         'buy_upper':  0.030,    # start buying at/near current price
         'sell_lower': 0.045,    # start selling at ~50% above entry
         'sell_upper': 0.075,    # sell hard at ~2.5x
-        'max_alpha':  25,       # small position, price is higher per unit
-        'max_tao_per_buy': 0.15,
-        'max_tao_per_sell': 0.15,
+        'max_alpha':  25,
+        'max_tao_per_buy': 0.10,
+        'max_tao_per_sell': 0.10,
         'max_slippage_percent_per_buy': 0.5,
+    },
+    100: {
+        'buy_lower':  0.008,    # buy aggressively near 30D low
+        'buy_upper':  0.0135,   # start buying at/near current price
+        'sell_lower': 0.020,    # start selling at ~50% above entry
+        'sell_upper': 0.035,    # sell hard at ~2.5x
+        'max_alpha':  15,       # small position — very thin pool
+        'max_tao_per_buy': 0.10,
+        'max_tao_per_sell': 0.10,
+        'max_slippage_percent_per_buy': 1.5,
     },
     110: {
         'buy_lower':  0.003,    # buy aggressively if it drops ~70%
@@ -18,8 +28,8 @@ SUBNET_SETTINGS = {
         'sell_lower': 0.013,    # start selling at ~40% above entry
         'sell_upper': 0.025,    # sell hard near ~3x
         'max_alpha':  50,
-        'max_tao_per_buy': 0.15,
-        'max_tao_per_sell': 0.15,
+        'max_tao_per_buy': 0.10,
+        'max_tao_per_sell': 0.10,
         'max_slippage_percent_per_buy': 1.0,
     },
 }
