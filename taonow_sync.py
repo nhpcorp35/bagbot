@@ -208,11 +208,13 @@ def sync_settings(bagbot_settings, current_holdings=None):
         return
 
     positions = data.get("positions", [])
+    logger.info(f"taonow_sync: got {len(positions)} positions from taonow")
     if not positions:
         logger.warning("taonow_sync: no positions in response — keeping existing settings")
         return
 
     holdings = current_holdings or {}
+    logger.info(f"taonow_sync: current holdings = {holdings}")
     new_settings = _build_settings_from_positions(positions, holdings, data)
     if not new_settings:
         logger.warning(
