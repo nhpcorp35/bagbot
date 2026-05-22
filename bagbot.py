@@ -412,8 +412,20 @@ class BittensorUtility():
                         holdings[netuid] = holdings.get(netuid, 0) + alpha
             return holdings
 
-        # Start taonow score polling in background — updates SUBNET_SETTINGS hourly
-        asyncio.create_task(taonow_sync.polling_loop(bagbot_settings, get_current_holdings))
+        # Wrapper that syncs settings AND rebuilds subnet_grids
+        async def sync_and_refresh():
+            await asyncio.sleep(60)
+            while True:
+                try:
+                    holdings = get_current_holdings()
+                    taonow_sync.sync_settings(bagbot_settings, holdings)
+                    await self.refresh_subnet_grid()
+                    logger.info("taonow_sync: subnet_grids rebuilt after settings update")
+                except Exception as e:
+                    logger.error(f"taonow_sync: error in sync_and_refresh: {e}")
+                await asyncio.sleep(taonow_sync.POLL_INTERVAL_HOURS * 3600)
+
+        asyncio.create_task(sync_and_refresh())
 
         while True:
             self.tick += 1

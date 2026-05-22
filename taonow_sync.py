@@ -160,12 +160,17 @@ def _write_settings_to_github(new_settings):
     Fails silently — bot keeps trading even if GitHub write fails.
     """
     if not GITHUB_TOKEN:
-        logger.warning("taonow_sync: GITHUB_TOKEN not set — skipping GitHub write-back")
-        return
+        # Try loading dynamically in case env var was set after module load
+        token = os.environ.get("GITHUB_TOKEN", "")
+        if not token:
+            logger.warning("taonow_sync: GITHUB_TOKEN not set — skipping GitHub write-back")
+            return
+    else:
+        token = GITHUB_TOKEN
 
     try:
         headers = {
-            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/json",
