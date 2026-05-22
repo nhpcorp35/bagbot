@@ -419,6 +419,8 @@ class BittensorUtility():
                 try:
                     holdings = get_current_holdings()
                     taonow_sync.sync_settings(bagbot_settings, holdings)
+                    # Force full grid reload by resetting gridLoaded flag
+                    self.gridLoaded = False
                     await self.refresh_subnet_grid()
                     logger.info("taonow_sync: subnet_grids rebuilt after settings update")
                 except Exception as e:
