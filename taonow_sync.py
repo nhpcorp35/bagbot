@@ -231,10 +231,12 @@ def sync_settings(bagbot_settings, current_holdings=None):
 
 async def polling_loop(bagbot_settings, get_holdings_fn=None):
     """
-    Async background loop — syncs once immediately at startup then every
-    POLL_INTERVAL_HOURS hours. Never crashes the bot on failure.
+    Async background loop — waits for first stats refresh, then syncs
+    immediately and every POLL_INTERVAL_HOURS hours after that.
     get_holdings_fn: optional callable that returns {netuid: alpha} dict.
     """
+    # Wait for first stats refresh to complete before syncing
+    await asyncio.sleep(60)
     while True:
         try:
             holdings = get_holdings_fn() if get_holdings_fn else {}
