@@ -1,35 +1,46 @@
 import os
 WALLET_PW = os.environ.get("WALLET_PW", "")
 WALLET_NAME = "bagbot"
+# Auto-updated by taonow_sync at 2026-05-22 15:04 UTC
 SUBNET_SETTINGS = {
+    4: {
+        'max_alpha': 30,
+        'max_tao_per_buy': 0.1,
+        'max_tao_per_sell': 0.1,
+        'max_slippage_percent_per_buy': 1.0,
+        'buy_lower': 0.03372158,
+        'buy_upper': 0.05732669,
+        'sell_lower': 0.07868369,
+        'sell_upper': 0.14050659,
+    },
     9: {
-        'buy_lower':  0.018,    # buy aggressively if it pulls back ~40%
-        'buy_upper':  0.030,    # start buying at/near current price
-        'sell_lower': 0.045,    # start selling at ~50% above entry
-        'sell_upper': 0.075,    # sell hard at ~2.5x
-        'max_alpha':  25,
-        'max_tao_per_buy': 0.10,
-        'max_tao_per_sell': 0.10,
-        'max_slippage_percent_per_buy': 0.5,
+        'max_alpha': 30,
+        'max_tao_per_buy': 0.1,
+        'max_tao_per_sell': 0.1,
+        'max_slippage_percent_per_buy': 1.0,
+        'buy_lower': 0.01393973,
+        'buy_upper': 0.02369755,
+        'sell_lower': 0.03252604,
+        'sell_upper': 0.05808222,
     },
     100: {
-        'buy_lower':  0.008,    # buy aggressively near 30D low
-        'buy_upper':  0.0135,   # start buying at/near current price
-        'sell_lower': 0.020,    # start selling at ~50% above entry
-        'sell_upper': 0.035,    # sell hard at ~2.5x
-        'max_alpha':  15,       # small position — very thin pool
-        'max_tao_per_buy': 0.10,
-        'max_tao_per_sell': 0.10,
-        'max_slippage_percent_per_buy': 1.5,
+        'buy_lower': 0.00649103,
+        'buy_upper': 0.0,
+        'sell_lower': 0.01233296,
+        'sell_upper': 0.01947309,
+        'max_alpha': 1,
+        'max_tao_per_buy': 0.0,
+        'max_tao_per_sell': 0.1,
+        'max_slippage_percent_per_buy': 1.0,
     },
     110: {
-        'buy_lower':  0.003,    # buy aggressively if it drops ~70%
-        'buy_upper':  0.0105,   # start buying at/near current price
-        'sell_lower': 0.013,    # start selling at ~40% above entry
-        'sell_upper': 0.025,    # sell hard near ~3x
-        'max_alpha':  50,
-        'max_tao_per_buy': 0.10,
-        'max_tao_per_sell': 0.10,
+        'buy_lower': 0.00423071,
+        'buy_upper': 0.0,
+        'sell_lower': 0.00803834,
+        'sell_upper': 0.01269212,
+        'max_alpha': 1,
+        'max_tao_per_buy': 0.0,
+        'max_tao_per_sell': 0.1,
         'max_slippage_percent_per_buy': 1.0,
     },
 }
