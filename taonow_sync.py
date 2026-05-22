@@ -9,6 +9,7 @@ Rules:
 - Max MAX_SUBNETS subnets traded at once
 - If taonow is unreachable, keep existing settings untouched
 - Polls every POLL_INTERVAL_HOURS hours
+- Subnets with existing holdings that fall below threshold get sell-only settings
 """
 
 import asyncio
@@ -16,23 +17,21 @@ import logging
 import os
 import time
 import urllib.request
-import urllib.error
 import json
 import base64
 
 logger = logging.getLogger(__name__)
 
-TAONOW_URL          = "https://taonow.io/api/cache"
-SCORE_THRESHOLD     = 80.0
-MAX_SUBNETS         = 3
-POLL_INTERVAL_HOURS = 1
+TAONOW_URL           = "https://taonow.io/api/cache"
+SCORE_THRESHOLD      = 80.0
+MAX_SUBNETS          = 3
+POLL_INTERVAL_HOURS  = 1
 
-GITHUB_TOKEN        = os.environ.get("GITHUB_TOKEN", "")
-BAGBOT_GITHUB_REPO  = "nhpcorp35/bagbot"
+GITHUB_TOKEN         = os.environ.get("GITHUB_TOKEN", "")
+BAGBOT_GITHUB_REPO   = "nhpcorp35/bagbot"
 BAGBOT_SETTINGS_PATH = "bagbot_settings_overrides.py"
-GITHUB_API          = "https://api.github.com"
+GITHUB_API           = "https://api.github.com"
 
-# Default per-subnet config applied to any taonow-selected subnet.
 DEFAULT_SUBNET_CONFIG = {
     "max_alpha":                    30,
     "max_tao_per_buy":              0.10,
@@ -55,12 +54,20 @@ def _fetch_taonow():
         return None
 
 
-def _build_settings_from_positions(positions):
+def _build_settings_from_positions(positions, current_holdings):
     """
     Pick top MAX_SUBNETS subnets scoring >= SCORE_THRESHOLD and build
     SUBNET_SETTINGS entries using live prices from the API response.
+    Also adds sell-only settings for any held subnets not in the top selection.
     Returns a dict or None if no qualifying subnets found.
     """
+    # Build price lookup from positions
+    price_lookup = {
+        int(p["netuid"]): float(p["price"])
+        for p in positions
+        if p.get("netuid") and p.get("price")
+    }
+
     qualifying = [
         p for p in positions
         if p.get("score") is not None
@@ -71,27 +78,56 @@ def _build_settings_from_positions(positions):
     ]
 
     if not qualifying:
-        return None
+        # Even if nothing qualifies, still add sell-only for held positions
+        new_settings = {}
+    else:
+        qualifying.sort(key=lambda p: p["score"], reverse=True)
+        top = qualifying[:MAX_SUBNETS]
+        new_settings = {}
+        for p in top:
+            netuid = int(p["netuid"])
+            price  = float(p["price"])
+            cfg = dict(DEFAULT_SUBNET_CONFIG)
+            cfg["buy_lower"]  = round(price * 0.60, 8)
+            cfg["buy_upper"]  = round(price * 1.02, 8)
+            cfg["sell_lower"] = round(price * 1.40, 8)
+            cfg["sell_upper"] = round(price * 2.50, 8)
+            new_settings[netuid] = cfg
+            logger.info(
+                f"taonow_sync: SN{netuid} selected (score={p['score']:.1f}, "
+                f"price=τ{price:.6f}, buy<τ{cfg['buy_upper']:.6f}, sell>τ{cfg['sell_lower']:.6f})"
+            )
 
-    qualifying.sort(key=lambda p: p["score"], reverse=True)
-    top = qualifying[:MAX_SUBNETS]
-
-    new_settings = {}
-    for p in top:
-        netuid = int(p["netuid"])
-        price  = float(p["price"])
-        cfg = dict(DEFAULT_SUBNET_CONFIG)
-        cfg["buy_lower"]  = round(price * 0.60, 8)
-        cfg["buy_upper"]  = round(price * 1.02, 8)
-        cfg["sell_lower"] = round(price * 1.40, 8)
-        cfg["sell_upper"] = round(price * 2.50, 8)
+    # Add sell-only settings for held subnets not in the new selection
+    for netuid, alpha in current_holdings.items():
+        if netuid in new_settings:
+            continue  # Already being actively traded
+        if netuid == 0:
+            continue  # Skip root subnet
+        if alpha < 0.001:
+            continue  # Dust, not worth selling
+        price = price_lookup.get(netuid)
+        if not price:
+            logger.warning(f"taonow_sync: SN{netuid} has {alpha:.4f} alpha but no price data — skipping sell-only")
+            continue
+        # Sell immediately — set sell_lower just below current price
+        cfg = {
+            "buy_lower":  0.0,
+            "buy_upper":  0.0,          # Never buy more
+            "sell_lower": round(price * 0.95, 8),  # Start selling now (5% below current)
+            "sell_upper": round(price * 1.50, 8),  # Sell hard at 50% above
+            "max_alpha":  0,            # Target 0 alpha
+            "max_tao_per_buy":  0.0,
+            "max_tao_per_sell": 0.10,
+            "max_slippage_percent_per_buy": 1.0,
+        }
         new_settings[netuid] = cfg
         logger.info(
-            f"taonow_sync: SN{netuid} selected (score={p['score']:.1f}, "
-            f"price=τ{price:.6f}, buy<τ{cfg['buy_upper']:.6f}, sell>τ{cfg['sell_lower']:.6f})"
+            f"taonow_sync: SN{netuid} added as sell-only "
+            f"({alpha:.4f} alpha held, price=τ{price:.6f}, sell>τ{cfg['sell_lower']:.6f})"
         )
 
-    return new_settings
+    return new_settings if new_settings else None
 
 
 def _build_settings_py(subnet_settings):
@@ -129,18 +165,15 @@ def _write_settings_to_github(new_settings):
             "Content-Type": "application/json",
         }
 
-        # Get current file SHA
         url = f"{GITHUB_API}/repos/{BAGBOT_GITHUB_REPO}/contents/{BAGBOT_SETTINGS_PATH}"
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=10) as resp:
             file_data = json.loads(resp.read().decode())
         sha = file_data["sha"]
 
-        # Build new content
         new_content = _build_settings_py(new_settings)
         encoded = base64.b64encode(new_content.encode()).decode()
 
-        # Commit
         payload = json.dumps({
             "message": f"taonow_sync: auto-update to SN{sorted(new_settings.keys())}",
             "content": encoded,
@@ -157,9 +190,10 @@ def _write_settings_to_github(new_settings):
         logger.error(f"taonow_sync: GitHub write-back failed ({e}) — bot continues trading")
 
 
-def sync_settings(bagbot_settings):
+def sync_settings(bagbot_settings, current_holdings=None):
     """
     Fetch taonow scores, update SUBNET_SETTINGS in memory, and write back to GitHub.
+    current_holdings: dict of {netuid: alpha_amount} for sell-only logic.
     Safe to call at any time — never raises, never clears settings on failure.
     """
     logger.info("taonow_sync: fetching scores from taonow.io...")
@@ -172,10 +206,11 @@ def sync_settings(bagbot_settings):
         logger.warning("taonow_sync: no positions in response — keeping existing settings")
         return
 
-    new_settings = _build_settings_from_positions(positions)
+    holdings = current_holdings or {}
+    new_settings = _build_settings_from_positions(positions, holdings)
     if not new_settings:
         logger.warning(
-            f"taonow_sync: no subnets scored >= {SCORE_THRESHOLD} — keeping existing settings"
+            f"taonow_sync: no subnets scored >= {SCORE_THRESHOLD} and no held positions — keeping existing settings"
         )
         return
 
@@ -191,18 +226,19 @@ def sync_settings(bagbot_settings):
     bagbot_settings.SUBNET_SETTINGS = new_settings
     logger.info(f"taonow_sync: SUBNET_SETTINGS updated → {list(new_subnets)}")
 
-    # Write back to GitHub so taonow settings panel stays in sync
     _write_settings_to_github(new_settings)
 
 
-async def polling_loop(bagbot_settings):
+async def polling_loop(bagbot_settings, get_holdings_fn=None):
     """
     Async background loop — syncs once immediately at startup then every
     POLL_INTERVAL_HOURS hours. Never crashes the bot on failure.
+    get_holdings_fn: optional callable that returns {netuid: alpha} dict.
     """
     while True:
         try:
-            sync_settings(bagbot_settings)
+            holdings = get_holdings_fn() if get_holdings_fn else {}
+            sync_settings(bagbot_settings, holdings)
         except Exception as e:
             logger.error(f"taonow_sync: unexpected error in polling_loop: {e}")
         await asyncio.sleep(POLL_INTERVAL_HOURS * 3600)

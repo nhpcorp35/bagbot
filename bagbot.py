@@ -402,8 +402,18 @@ class BittensorUtility():
         await self.setup()
         await self.refresh_subnet_grid()  # Load subnet settings before first tick
 
+        # Helper to get current holdings for taonow_sync sell-only logic
+        def get_current_holdings():
+            holdings = {}
+            for hotkey_data in self.current_stake_info.values():
+                for netuid, stake_info in hotkey_data.items():
+                    alpha = rao_to_tao(stake_info.stake.rao)
+                    if alpha > 0.001:
+                        holdings[netuid] = holdings.get(netuid, 0) + alpha
+            return holdings
+
         # Start taonow score polling in background — updates SUBNET_SETTINGS hourly
-        asyncio.create_task(taonow_sync.polling_loop(bagbot_settings))
+        asyncio.create_task(taonow_sync.polling_loop(bagbot_settings, get_current_holdings))
 
         while True:
             self.tick += 1
