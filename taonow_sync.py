@@ -74,13 +74,13 @@ def _build_settings_from_positions(positions, current_holdings, data=None):
         if netuid and int(netuid) not in price_lookup and p.get("price"):
             price_lookup[int(netuid)] = float(p["price"])
 
+    logger.info(f"taonow_sync: got {len(positions)} positions, {len([p for p in positions if p.get('score') is not None])} with scores")
     qualifying = [
         p for p in positions
         if p.get("score") is not None
         and p.get("score") >= SCORE_THRESHOLD
         and p.get("netuid") not in (None, 0)
-        and p.get("price") is not None
-        and p.get("price") > 0
+        and price_lookup.get(int(p["netuid"]))  # price must be in pool data
     ]
 
     if not qualifying:
@@ -92,7 +92,10 @@ def _build_settings_from_positions(positions, current_holdings, data=None):
         new_settings = {}
         for p in top:
             netuid = int(p["netuid"])
-            price  = float(p["price"])
+            price  = price_lookup.get(netuid)
+            if not price:
+                logger.warning(f"taonow_sync: SN{netuid} has no price in pool — skipping")
+                continue
             cfg = dict(DEFAULT_SUBNET_CONFIG)
             cfg["buy_lower"]  = round(price * 0.60, 8)
             cfg["buy_upper"]  = round(price * 1.02, 8)
@@ -105,9 +108,10 @@ def _build_settings_from_positions(positions, current_holdings, data=None):
             )
 
     # Add sell-only settings for held subnets not in the new selection
+    active_netuids = set(new_settings.keys())  # subnets already added as active
     for netuid, alpha in current_holdings.items():
-        if netuid in new_settings:
-            continue  # Already being actively traded
+        if netuid in active_netuids:
+            continue  # Already being actively traded — don't override
         if netuid == 0:
             continue  # Skip root subnet
         if alpha < 0.001:
@@ -118,11 +122,11 @@ def _build_settings_from_positions(positions, current_holdings, data=None):
             continue
         # Sell immediately — set sell_lower just below current price
         cfg = {
-            "buy_lower":  0.0,
-            "buy_upper":  0.0,          # Never buy more
+            "buy_lower":  round(price * 0.50, 8),  # Never reached since buy_upper=0
+            "buy_upper":  0.0,                      # Never buy more
             "sell_lower": round(price * 0.95, 8),  # Start selling now (5% below current)
             "sell_upper": round(price * 1.50, 8),  # Sell hard at 50% above
-            "max_alpha":  0,            # Target 0 alpha
+            "max_alpha":  1,            # Must be >= 1 to pass validation; effectively 0 since buy_upper=0
             "max_tao_per_buy":  0.0,
             "max_tao_per_sell": 0.10,
             "max_slippage_percent_per_buy": 1.0,
