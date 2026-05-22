@@ -54,19 +54,25 @@ def _fetch_taonow():
         return None
 
 
-def _build_settings_from_positions(positions, current_holdings):
+def _build_settings_from_positions(positions, current_holdings, data=None):
     """
     Pick top MAX_SUBNETS subnets scoring >= SCORE_THRESHOLD and build
     SUBNET_SETTINGS entries using live prices from the API response.
     Also adds sell-only settings for any held subnets not in the top selection.
     Returns a dict or None if no qualifying subnets found.
     """
-    # Build price lookup from positions
+    # Build price lookup from pool data (more complete than positions)
+    pool = (data or {}).get("pool", {})
     price_lookup = {
-        int(p["netuid"]): float(p["price"])
-        for p in positions
-        if p.get("netuid") and p.get("price")
+        int(k): float(v["price"])
+        for k, v in pool.items()
+        if v.get("price")
     }
+    # Fall back to positions prices if pool missing any
+    for p in positions:
+        netuid = p.get("netuid")
+        if netuid and int(netuid) not in price_lookup and p.get("price"):
+            price_lookup[int(netuid)] = float(p["price"])
 
     qualifying = [
         p for p in positions
@@ -207,7 +213,7 @@ def sync_settings(bagbot_settings, current_holdings=None):
         return
 
     holdings = current_holdings or {}
-    new_settings = _build_settings_from_positions(positions, holdings)
+    new_settings = _build_settings_from_positions(positions, holdings, data)
     if not new_settings:
         logger.warning(
             f"taonow_sync: no subnets scored >= {SCORE_THRESHOLD} and no held positions — keeping existing settings"
