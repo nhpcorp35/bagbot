@@ -32,8 +32,8 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler('staking.log')#,
-#        logging.StreamHandler()
+        logging.FileHandler('staking.log'),
+        logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
