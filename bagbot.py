@@ -23,6 +23,44 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace
 import taonow_sync
+import urllib.request as _urllib_req
+
+TAONOW_BASE = "https://taonow.io"
+
+def _record_bot_entry(netuid, tao_amount):
+    """
+    After a successful buy, POST the cumulative invested TAO to taonow
+    so the Unrealized P&L dashboard stays in sync automatically.
+    Fetches any existing entry first and adds to it (handles multiple buys).
+    Fails silently — never interrupts the trading loop.
+    """
+    try:
+        headers = {"Content-Type": "application/json", "User-Agent": "bagbot/1.0"}
+
+        # GET existing entry (if any)
+        existing_tao = 0.0
+        try:
+            req = _urllib_req.Request(
+                f"{TAONOW_BASE}/api/bot/entries",
+                headers={"User-Agent": "bagbot/1.0"}
+            )
+            with _urllib_req.urlopen(req, timeout=8) as resp:
+                entries = json.loads(resp.read().decode())
+                existing = entries.get(str(netuid)) or entries.get(int(netuid)) or {}
+                existing_tao = float(existing.get("invested_tao", 0) or 0)
+        except Exception:
+            pass  # No existing entry — start fresh
+
+        new_total = existing_tao + float(tao_amount)
+        payload = json.dumps({"invested_tao": new_total}).encode()
+        req = _urllib_req.Request(
+            f"{TAONOW_BASE}/api/bot/entries/{netuid}",
+            data=payload, headers=headers, method="PUT"
+        )
+        _urllib_req.urlopen(req, timeout=8)
+        logger.info(f"bagbot: recorded entry for SN{netuid}: total invested τ{new_total:.4f}")
+    except Exception as e:
+        logger.warning(f"bagbot: entry record failed for SN{netuid}: {e}")
 
 class InvalidSettings(Exception): pass
 class InternetIssueException(Exception): pass
@@ -712,6 +750,7 @@ class BittensorUtility():
                 #print(f'after buy {str(buyTrade)}: {str(stake_result)}')
                 if stake_result is True or stake_result.__dict__.get('success') is True:
                     logger.info(f"Staked {float(buyTrade['tao_amount'])} TAO to subnet {buyTrade['netuid']} ({str(stake_result)})")
+                    _record_bot_entry(buyTrade['netuid'], float(buyTrade['tao_amount']))
                 else:
                     logger.info(f"Failed to stake {float(buyTrade['tao_amount'])} TAO to subnet {buyTrade['netuid']} ({str(stake_result)})")
             except asyncio.TimeoutError:
