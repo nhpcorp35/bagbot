@@ -62,6 +62,50 @@ def _record_bot_entry(netuid, tao_amount):
     except Exception as e:
         logger.warning(f"bagbot: entry record failed for SN{netuid}: {e}")
 
+def _reduce_bot_entry(netuid, tao_sold):
+    """
+    After a successful sell, reduce the invested TAO for that subnet proportionally.
+    If invested drops to near zero, DELETE the entry entirely.
+    Fails silently — never interrupts the trading loop.
+    """
+    try:
+        headers = {"Content-Type": "application/json", "User-Agent": "bagbot/1.0"}
+
+        # GET existing entry
+        existing_tao = 0.0
+        try:
+            req = _urllib_req.Request(
+                f"{TAONOW_BASE}/api/bot/entries",
+                headers={"User-Agent": "bagbot/1.0"}
+            )
+            with _urllib_req.urlopen(req, timeout=8) as resp:
+                entries = json.loads(resp.read().decode())
+                existing = entries.get(str(netuid)) or entries.get(int(netuid)) or {}
+                existing_tao = float(existing.get("invested_tao", 0) or 0)
+        except Exception:
+            return  # No entry to reduce
+
+        new_total = max(0.0, existing_tao - float(tao_sold))
+
+        if new_total < 0.001:
+            # Fully exited — delete the entry
+            req = _urllib_req.Request(
+                f"{TAONOW_BASE}/api/bot/entries/{netuid}",
+                headers={"User-Agent": "bagbot/1.0"}, method="DELETE"
+            )
+            _urllib_req.urlopen(req, timeout=8)
+            logger.info(f"bagbot: cleared entry for SN{netuid} (fully exited)")
+        else:
+            payload = json.dumps({"invested_tao": new_total}).encode()
+            req = _urllib_req.Request(
+                f"{TAONOW_BASE}/api/bot/entries/{netuid}",
+                data=payload, headers=headers, method="PUT"
+            )
+            _urllib_req.urlopen(req, timeout=8)
+            logger.info(f"bagbot: reduced entry for SN{netuid}: τ{existing_tao:.4f} → τ{new_total:.4f}")
+    except Exception as e:
+        logger.warning(f"bagbot: entry reduce failed for SN{netuid}: {e}")
+
 class InvalidSettings(Exception): pass
 class InternetIssueException(Exception): pass
 
@@ -781,6 +825,7 @@ class BittensorUtility():
                 print(f'after sell {str(sellTrade)}')
                 if unstake_result is True:
                     logger.info(f"Unstaked {float(sellTrade['alpha_amount'])} stake units from sn{sellTrade['netuid']} (approx. {sellTrade['approx_tao']:.4f} TAO value) at price: {self.stats[subnet_netuid]['price']}.  my threshold = {sellTrade['sell_threshold']}")
+                    _reduce_bot_entry(sellTrade['netuid'], sellTrade['approx_tao'])
                 else:
                     logger.info(f"Failed to unstake {str(sellTrade)}  sn{subnet_netuid} ({str(unstake_result)})")
             except asyncio.TimeoutError:
