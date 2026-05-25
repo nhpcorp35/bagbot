@@ -97,10 +97,10 @@ def _build_settings_from_positions(positions, current_holdings, data=None):
                 logger.warning(f"taonow_sync: SN{netuid} has no price in pool — skipping")
                 continue
             cfg = dict(DEFAULT_SUBNET_CONFIG)
-            cfg["buy_lower"]  = round(price * 0.60, 8)
-            cfg["buy_upper"]  = round(price * 1.02, 8)
-            cfg["sell_lower"] = round(price * 1.40, 8)
-            cfg["sell_upper"] = round(price * 2.50, 8)
+            cfg["buy_lower"]  = round(price * 0.75, 8)  # Buy aggressively down to 25% below current
+            cfg["buy_upper"]  = round(price * 1.10, 8)  # Buy up to 10% below current (was 2%)
+            cfg["sell_lower"] = round(price * 1.20, 8)  # Start selling at 20% above current (was 40%)
+            cfg["sell_upper"] = round(price * 1.80, 8)  # Sell hard at 80% above (was 150%)
             new_settings[netuid] = cfg
             logger.info(
                 f"taonow_sync: SN{netuid} selected (score={p['score']:.1f}, "
