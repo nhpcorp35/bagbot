@@ -393,6 +393,13 @@ class BittensorUtility():
         while all_subnets is None:
             try:
                 all_subnets = await self.sub.all_subnets()
+                if not isinstance(all_subnets, list):
+                    logger.error(f'all_subnets returned unexpected type: {type(all_subnets)}, retrying...')
+                    all_subnets = None
+                    await asyncio.sleep(3)
+                    self.sub = await my_async_subtensor("finney")
+                    attempts += 1
+                    continue
             except (AttributeError, websockets.exceptions.InvalidStatus):
                 if attempts > 5:
                     self.sendNotification(errMsg)
