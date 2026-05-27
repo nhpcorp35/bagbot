@@ -1,36 +1,36 @@
 import os
 WALLET_PW = os.environ.get("WALLET_PW", "")
 WALLET_NAME = "bagbot"
-# Auto-updated by taonow_sync at 2026-05-27 03:15 UTC
+# Auto-updated by taonow_sync at 2026-05-27 03:17 UTC
 SUBNET_SETTINGS = {
     4: {
-        'max_alpha': 30,
-        'max_tao_per_buy': 0.1,
+        'buy_lower': 0.02866488,
+        'buy_upper': 0.0,
+        'sell_lower': 0.05446328,
+        'sell_upper': 0.08599465,
+        'max_alpha': 1,
+        'max_tao_per_buy': 0.0,
         'max_tao_per_sell': 0.1,
         'max_slippage_percent_per_buy': 1.0,
-        'buy_lower': 0.04294319,
-        'buy_upper': 0.06298335,
-        'sell_lower': 0.06870911,
-        'sell_upper': 0.10306366,
     },
     9: {
-        'max_alpha': 30,
-        'max_tao_per_buy': 0.1,
+        'buy_lower': 0.01466694,
+        'buy_upper': 0.0,
+        'sell_lower': 0.02786718,
+        'sell_upper': 0.04400081,
+        'max_alpha': 1,
+        'max_tao_per_buy': 0.0,
         'max_tao_per_sell': 0.1,
         'max_slippage_percent_per_buy': 1.0,
-        'buy_lower': 0.02201547,
-        'buy_upper': 0.03228935,
-        'sell_lower': 0.03522475,
-        'sell_upper': 0.05283712,
     },
     120: {
-        'max_alpha': 30,
-        'max_tao_per_buy': 0.1,
+        'buy_lower': 0.03127361,
+        'buy_upper': 0.0,
+        'sell_lower': 0.05941985,
+        'sell_upper': 0.09382082,
+        'max_alpha': 1,
+        'max_tao_per_buy': 0.0,
         'max_tao_per_sell': 0.1,
         'max_slippage_percent_per_buy': 1.0,
-        'buy_lower': 0.04691041,
-        'buy_upper': 0.06880194,
-        'sell_lower': 0.07505666,
-        'sell_upper': 0.11258499,
     },
 }
