@@ -40,13 +40,16 @@ DEFAULT_SUBNET_CONFIG = {
 }
 
 
+TAONOW_PASSWORD = os.environ.get("PASSWORD", "")
+
 def _fetch_taonow():
     """Fetch /api/cache from taonow. Returns parsed JSON or None on failure."""
     try:
-        req = urllib.request.Request(
-            TAONOW_URL,
-            headers={"User-Agent": "bagbot/1.0"},
-        )
+        headers = {"User-Agent": "bagbot/1.0"}
+        if TAONOW_PASSWORD:
+            credentials = base64.b64encode(f"user:{TAONOW_PASSWORD}".encode()).decode()
+            headers["Authorization"] = f"Basic {credentials}"
+        req = urllib.request.Request(TAONOW_URL, headers=headers)
         with urllib.request.urlopen(req, timeout=10) as resp:
             return json.loads(resp.read().decode())
     except Exception as e:
