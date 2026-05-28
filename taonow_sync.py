@@ -42,6 +42,11 @@ DEFAULT_SUBNET_CONFIG = {
 
 TAONOW_PASSWORD = os.environ.get("PASSWORD", "")
 
+# Subnets in this list are never touched by taonow_sync — thresholds you set
+# manually in the bot settings panel will be preserved across every sync.
+# Add/remove subnet IDs here to pin/unpin them.
+PINNED_SUBNETS = {64}  # SN64 Chutes — manually managed
+
 def _fetch_taonow():
     """Fetch /api/cache from taonow. Returns parsed JSON or None on failure."""
     try:
@@ -83,6 +88,7 @@ def _build_settings_from_positions(positions, current_holdings, data=None):
         if p.get("score") is not None
         and p.get("score") >= SCORE_THRESHOLD
         and p.get("netuid") not in (None, 0)
+        and int(p["netuid"]) not in PINNED_SUBNETS  # pinned subnets are never auto-managed
         and price_lookup.get(int(p["netuid"]))  # price must be in pool data
     ]
 
@@ -117,6 +123,8 @@ def _build_settings_from_positions(positions, current_holdings, data=None):
             continue  # Already being actively traded — don't override
         if netuid == 0:
             continue  # Skip root subnet
+        if netuid in PINNED_SUBNETS:
+            continue  # Pinned — never auto-manage
         if alpha < 0.001:
             continue  # Dust, not worth selling
         price = price_lookup.get(netuid)
@@ -243,8 +251,14 @@ def sync_settings(bagbot_settings, current_holdings=None):
         if added:   logger.info(f"taonow_sync: adding subnets {added}")
         if removed: logger.info(f"taonow_sync: removing subnets {removed}")
 
+    # Preserve pinned subnet settings from current config
+    for netuid in PINNED_SUBNETS:
+        if netuid in bagbot_settings.SUBNET_SETTINGS:
+            new_settings[netuid] = bagbot_settings.SUBNET_SETTINGS[netuid]
+            logger.info(f"taonow_sync: SN{netuid} is pinned — preserving existing settings")
+
     bagbot_settings.SUBNET_SETTINGS = new_settings
-    logger.info(f"taonow_sync: SUBNET_SETTINGS updated → {list(new_subnets)}")
+    logger.info(f"taonow_sync: SUBNET_SETTINGS updated → {list(new_settings.keys())}")
 
     _write_settings_to_github(new_settings)
 
