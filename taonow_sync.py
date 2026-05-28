@@ -45,7 +45,7 @@ TAONOW_PASSWORD = os.environ.get("PASSWORD", "")
 # Subnets in this list are never touched by taonow_sync — thresholds you set
 # manually in the bot settings panel will be preserved across every sync.
 # Add/remove subnet IDs here to pin/unpin them.
-PINNED_SUBNETS = {64}  # SN64 Chutes — manually managed
+PINNED_SUBNETS = {9, 64}  # managed via taonow.io/bot
 
 def _fetch_taonow():
     """Fetch /api/cache from taonow. Returns parsed JSON or None on failure."""
