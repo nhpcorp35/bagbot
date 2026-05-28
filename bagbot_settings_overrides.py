@@ -1,7 +1,7 @@
 import os
 WALLET_PW = os.environ.get("WALLET_PW", "")
 WALLET_NAME = "bagbot"
-# Auto-updated by taonow_sync at 2026-05-28 21:47 UTC
+# Auto-updated by taonow_sync at 2026-05-28 21:50 UTC
 SUBNET_SETTINGS = {
     4: {
         'max_alpha': 30,
