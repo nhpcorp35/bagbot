@@ -15,9 +15,9 @@ SUBNET_SETTINGS = {
     64: {
         'buy_lower': 0.05176,
         'buy_upper': 0.07591,
+        'max_alpha': 30,
         'sell_lower': 0.08281,
         'sell_upper': 0.12422,
-        'max_alpha': 30,
     },
     120: {
         'buy_lower': 0.0469798,
