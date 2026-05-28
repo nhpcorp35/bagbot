@@ -9,8 +9,8 @@ SUBNET_SETTINGS = {
         'max_slippage_percent_per_buy': 1,
         'max_tao_per_buy': 0.1,
         'max_tao_per_sell': 0.1,
-        'sell_lower': 0.03639868,
-        'sell_upper': 0.05459801,
+        'sell_lower': 0.04413,
+        'sell_upper': 0.0735,
     },
     64: {
         'buy_lower': 0.05176,
