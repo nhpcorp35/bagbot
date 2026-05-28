@@ -23,7 +23,7 @@ import base64
 logger = logging.getLogger(__name__)
 
 TAONOW_URL           = "https://taonow.io/api/cache"
-SCORE_THRESHOLD      = 80.0
+SCORE_THRESHOLD      = 65.0
 MAX_SUBNETS          = 3
 POLL_INTERVAL_HOURS  = 1
 
