@@ -260,7 +260,7 @@ def sync_settings(bagbot_settings, current_holdings=None):
     bagbot_settings.SUBNET_SETTINGS = new_settings
     logger.info(f"taonow_sync: SUBNET_SETTINGS updated → {list(new_settings.keys())}")
 
-    _write_settings_to_github(new_settings)
+    # _write_settings_to_github(new_settings)  # disabled: git commits trigger unnecessary Railway rebuilds
 
 
 async def polling_loop(bagbot_settings, get_holdings_fn=None):
@@ -278,3 +278,4 @@ async def polling_loop(bagbot_settings, get_holdings_fn=None):
         except Exception as e:
             logger.error(f"taonow_sync: unexpected error in polling_loop: {e}")
         await asyncio.sleep(POLL_INTERVAL_HOURS * 3600)
+
