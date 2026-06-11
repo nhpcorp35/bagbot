@@ -1,7 +1,7 @@
 import os
 WALLET_PW = os.environ.get("WALLET_PW", "")
 WALLET_NAME = "bagbot"
-# Auto-updated by taonow_sync at 2026-06-11 09:08 UTC
+# Auto-updated by taonow_sync at 2026-06-11 10:08 UTC
 SUBNET_SETTINGS = {
     9: {
         'buy_lower': 0.02274917,
@@ -25,9 +25,9 @@ SUBNET_SETTINGS = {
         'max_tao_per_buy': 0.1,
         'max_tao_per_sell': 0.1,
         'max_slippage_percent_per_buy': 1.0,
-        'buy_lower': 0.0078409,
-        'buy_upper': 0.01149998,
-        'sell_lower': 0.01254543,
-        'sell_upper': 0.01881815,
+        'buy_lower': 0.00797922,
+        'buy_upper': 0.01170285,
+        'sell_lower': 0.01276675,
+        'sell_upper': 0.01915012,
     },
 }
