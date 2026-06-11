@@ -124,3 +124,7 @@ The bot implements robust error handling for the volatile blockchain environment
 - The bot waits for block confirmations between trading cycles to ensure accurate state.
 - When modifying grid settings, always ensure buy_upper < sell_lower to prevent immediate buy/sell cycles.
 - Tests in `test_bagbot.py` cover grid validation, buy/sell construction, and slippage calculations.
+
+
+## Changelog reminder
+At the end of every dev session, commit a new dated entry to `CHANGELOG.md` summarizing all changes made. Do this automatically — do not wait to be asked.
