@@ -114,7 +114,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler('staking.log'),
+        logging.FileHandler('/root/.bittensor/staking.log'),
         logging.StreamHandler()
     ]
 )
