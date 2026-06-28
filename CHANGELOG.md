@@ -1,3 +1,12 @@
+## 2026-06-28
+
+### bagbot
+
+**staking.log persistence fix**
+- Changed log file path from `staking.log` (ephemeral `/app/`) to `/root/.bittensor/staking.log` (persistent volume mount) so trade history survives redeploys
+
+---
+
 # Bagbot Changelog
 
 ## 2026-06-11
