@@ -570,7 +570,7 @@ class BittensorUtility():
                                             wallet=self.wallet,
                                             hotkey_ss58=hotkey,
                                             netuid=netuid,
-                                            amount=bt.utils.balance.tao(total_alpha, netuid),
+                                            amount=total_alpha,
                                             rate_tolerance=0.05,
                                             wait_for_inclusion=True,
                                             wait_for_finalization=False,
