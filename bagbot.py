@@ -560,7 +560,7 @@ class BittensorUtility():
                         if entry.get("force_exit"):
                             netuid = int(key)
                             logger.info(f'Force exit signal detected for SN{netuid}')
-                            total_alpha = self.get_total_stake_in_subnet(netuid)
+                            total_alpha = self.my_current_stake(netuid)
                             if total_alpha > 0:
                                 hotkey = self.determineHotKey(total_alpha, netuid)
                                 if hotkey:
@@ -570,7 +570,7 @@ class BittensorUtility():
                                             wallet=self.wallet,
                                             hotkey_ss58=hotkey,
                                             netuid=netuid,
-                                            amount=bt.utils.balance.Balance.from_tao(total_alpha),
+                                            amount=bt.utils.balance.tao(total_alpha, netuid),
                                             rate_tolerance=0.05,
                                             wait_for_inclusion=True,
                                             wait_for_finalization=False,
