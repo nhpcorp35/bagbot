@@ -550,6 +550,56 @@ class BittensorUtility():
 
                 print_link(f"https://taoflute.com/d/5c216965-b99b-4d82-8b31-931bb3d71567/subnets-overview?orgId=1&var-target_subnets={allSubnetParams}", 'Taoflute Portfolio link')
                 logger.info(f'Tick {self.tick}: Checking trades')
+                # Check for force exit signals via taonow entries API
+                try:
+                    import urllib.request as _ureq
+                    req = _ureq.Request(f"{TAONOW_BASE}/api/bot/entries", headers={"User-Agent": "bagbot/1.0"})
+                    with _ureq.urlopen(req, timeout=8) as resp:
+                        all_entries = json.loads(resp.read().decode())
+                    for key, entry in all_entries.items():
+                        if entry.get("force_exit"):
+                            netuid = int(key)
+                            logger.info(f'Force exit signal detected for SN{netuid}')
+                            total_alpha = self.get_total_stake_in_subnet(netuid)
+                            if total_alpha > 0:
+                                hotkey = self.determineHotKey(total_alpha, netuid)
+                                if hotkey:
+                                    logger.info(f'Force exiting SN{netuid}: unstaking {total_alpha:.4f} alpha')
+                                    result = await asyncio.wait_for(
+                                        self.sub.unstake(
+                                            wallet=self.wallet,
+                                            hotkey_ss58=hotkey,
+                                            netuid=netuid,
+                                            amount=bt.utils.balance.Balance.from_tao(total_alpha),
+                                            rate_tolerance=0.05,
+                                            wait_for_inclusion=True,
+                                            wait_for_finalization=False,
+                                            safe_unstaking=True,
+                                            allow_partial_stake=True,
+                                        ),
+                                        timeout=60.0,
+                                    )
+                                    logger.info(f'Force exit SN{netuid} result: {result}')
+                                else:
+                                    logger.warning(f'Force exit SN{netuid}: no hotkey found')
+                            else:
+                                logger.info(f'Force exit SN{netuid}: no stake, clearing flag')
+                            # Clear the force_exit flag
+                            try:
+                                clear_payload = json.dumps({"force_exit": False}).encode()
+                                clear_req = _ureq.Request(
+                                    f"{TAONOW_BASE}/api/bot/entries/{netuid}",
+                                    data=clear_payload,
+                                    headers={"Content-Type": "application/json", "User-Agent": "bagbot/1.0"},
+                                    method="PUT"
+                                )
+                                _ureq.urlopen(clear_req, timeout=8)
+                                logger.info(f'Force exit flag cleared for SN{netuid}')
+                            except Exception as e:
+                                logger.warning(f'Failed to clear force_exit flag for SN{netuid}: {e}')
+                except Exception as e:
+                    logger.warning(f'Force exit check failed: {e}')
+
                 for subnet_netuid in bagbot_settings.SUBNET_SETTINGS:
                     await self.do_available_trades(subnet_netuid)
 
